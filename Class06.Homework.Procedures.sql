@@ -5,7 +5,7 @@
 --Procedure should return the total number of grades in the system for the Student on input (from the CreateGrade)
 --Procedure should return second resultset with the MAX Grade of all grades for the Student and Teacher on input (regardless the Course)
 
-create procedure dbo.usp_CreateGrade(@StudentId int, @CourseId smallint, @TeacherId smallint, @Grade tinyint, @Comment nvarchar(100), @CreatedDate datetime)
+create or alter procedure dbo.usp_CreateGrade(@StudentId int, @CourseId smallint, @TeacherId smallint, @Grade tinyint, @Comment nvarchar(100), @CreatedDate datetime)
 as
 begin
 	insert into dbo.Grade(StudentID, CourseID, TeacherID, Grade, Comment, CreatedDate)
@@ -22,19 +22,13 @@ begin
 end
 GO
 
+delete from dbo.Grade where Id = 20130
+
+
 exec dbo.usp_CreateGrade
 	@StudentId = 4, 
 	@CourseId = 3, 
 	@TeacherId = 2, 
-	@Grade = 10,
-	@Comment = 'Test', 
-	@CreatedDate = '2020.08.21'
-GO
-
-exec dbo.usp_CreateGrade
-	@StudentId = 9, 
-	@CourseId = 8, 
-	@TeacherId = 3, 
 	@Grade = 10,
 	@Comment = 'Test', 
 	@CreatedDate = '2020.08.21'
@@ -54,23 +48,35 @@ begin
 	insert into dbo.GradeDetails(GradeID, AchievementTypeID, AchievementPoints, AchievementMaxPoints, AchievementDate)
 	values(@GradeId, @AchievmentTypeId, @AchievementPoint, @AchievmentMaxPoints, @AchievmentDate)
 
-	select sum(@AchievementPoint / @AchievmentMaxPoints * a.ParticipationRate) as GradeSum
+	select sum(cast(gd.AchievementPoints as decimal(5,2)) / cast(gd.AchievementMaxPoints as decimal(5,2)) * a.ParticipationRate) as GradePoints
 	from 
 		dbo.GradeDetails gd 
 		inner join 
 		dbo.AchievementType a on gd.AchievementTypeID = a.Id
-	where GradeID = @GradeId and AchievementTypeID = @AchievmentTypeId
+	where gd.GradeID = @GradeId
+
 end
 
 exec dbo.usp_CreateGradeDetails
-	@GradeId = 20129,
+	@GradeId = 20131,
 	@AchievmentTypeId = 4,
 	@AchievementPoint = 75, 
 	@AchievmentMaxPoints = 100,
 	@AchievmentDate = '2020-10-07'
 
+exec dbo.usp_CreateGradeDetails
+	@GradeId = 20131,
+	@AchievmentTypeId = 2,
+	@AchievementPoint = 90, 
+	@AchievmentMaxPoints = 100,
+	@AchievmentDate = '2020-10-09'
+
+exec dbo.usp_CreateGradeDetails
+	@GradeId = 20131,
+	@AchievmentTypeId = 1,
+	@AchievementPoint = 64, 
+	@AchievmentMaxPoints = 100,
+	@AchievmentDate = '2020-10-11'
 
 select * from dbo.GradeDetails order by id desc
 
---Output from this procedure should be resultset with SUM of GradePoints calculated with formula AchievementPoints/AchievementMaxPoints*ParticipationRate for specific Grade
---(Zaglaviv na ova baranje sekogas resultat mi dava 0)
